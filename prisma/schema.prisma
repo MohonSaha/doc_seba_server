@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  eventID     Int      @id @default(autoincrement()) // Primary key with capital "ID"
+  eventName   String
+  eventDate   String
+  startTime   String
+  endTime     String
+  location    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  participants ParticipantOnEvent[]
+
+  @@map("events")
+}
+
+model Participant {
+  participantID Int      @id @default(autoincrement()) // Primary key with capital "ID"
+  email         String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  events ParticipantOnEvent[]
+
+  @@map("participants")
+}
+
+model ParticipantOnEvent {
+  eventID       Int
+  participantID Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  event       Event       @relation(fields: [eventID], references: [eventID])
+  participant Participant @relation(fields: [participantID], references: [participantID])
+
+  @@id([eventID, participantID]) // Composite primary key
+  @@map("participantOnEvent")
+}
+
+model User {
+  id                 String            @id @default(uuid())
+  email              String            @unique
+  mobile             String
+  password           String
+  role               Role
+  needPasswordChange Boolean           @default(true)
+  status             UserStatus        @default(PENDING)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  DiagnosticCenter   DiagnosticCenter?
+}
+
+model DiagnosticCenter {
+  diagnosticID   String   @id @default(uuid())
+  dsID           String
+  name           String? 
+  contactInfo    String?
+  altContactInfo String?
+  openingHours   String?
+  websiteUrl     String?
+  description    String?
+  rating         Int?
+  logo           String?
+  bannerImg      String?
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  email          String   @unique
+  user           User     @relation(fields: [email], references: [email])
+  addressId      String?
+  address        Address? @relation(fields: [addressId], references: [id])
+ 
+}
+
+model Address {
+  id                String             @id @default(uuid())
+  division          String
+  district          String
+  upozila           String
+  diagnosticCenters DiagnosticCenter[]
+}
+
+enum UserStatus {
+  PENDING
+  REVIEWING
+  ACTIVATE
+  BLOCKED
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  DiagnosticCenter
+  DOCTOR
+  PATIENT
+}
