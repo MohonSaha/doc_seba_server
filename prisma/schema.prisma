@@ -138,8 +138,10 @@ model DiagnosticCenterService {
   id                  String                   @id @default(uuid())
   diagnosticCenterId  String                   // FK to DiagnosticCenter
   predefinedServiceId String                   @unique// FK to PredefinedService
-  customCost          Float?                   // Customizable cost per center
-  customDescription   String?                  // Customizable description per center
+  serviceName         String                   @unique
+  serviceCost         Float?                   // Customizable cost per center
+  serviceDescription  String?                  // Customizable description per center
+  serviceCategory     String?
   isActive            Boolean                  @default(true)
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt

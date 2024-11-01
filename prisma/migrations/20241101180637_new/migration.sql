@@ -131,13 +131,16 @@ CREATE TABLE `diagnosticCenterServices` (
     `id` VARCHAR(191) NOT NULL,
     `diagnosticCenterId` VARCHAR(191) NOT NULL,
     `predefinedServiceId` VARCHAR(191) NOT NULL,
-    `customCost` DOUBLE NULL,
-    `customDescription` VARCHAR(191) NULL,
+    `serviceName` VARCHAR(191) NOT NULL,
+    `serviceCost` DOUBLE NULL,
+    `serviceDescription` VARCHAR(191) NULL,
+    `serviceCategory` VARCHAR(191) NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `diagnosticCenterServices_predefinedServiceId_key`(`predefinedServiceId`),
+    UNIQUE INDEX `diagnosticCenterServices_serviceName_key`(`serviceName`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

@@ -5,12 +5,9 @@ const router = express.Router();
 
 router.post("/create-service", ServiceControllers.createService);
 
-router.post("/add-services", ServiceControllers.addServiceToDiagnosticCenter);
+router.patch("/:serviceId", ServiceControllers.updateService);
 
-router.get(
-  "/:centerId/all-services",
-  ServiceControllers.getServicesByDiagnosticCenter
-);
+router.patch("/delete/:serviceId", ServiceControllers.deleteService);
 
 router.get("/:serviceId", ServiceControllers.getServiceById);
 

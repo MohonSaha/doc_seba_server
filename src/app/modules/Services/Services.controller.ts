@@ -17,34 +17,30 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const addServiceToDiagnosticCenter = catchAsync(
-  async (req: Request, res: Response) => {
-    const result = await ServiceServices.addServiceToDiagnosticCenter(req.body);
+const updateService = catchAsync(async (req: Request, res: Response) => {
+  const { serviceId } = req.params;
+  const result = await ServiceServices.updateServicesIntoDB(
+    serviceId,
+    req.body
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service data updated successfully ",
+    data: result,
+  });
+});
 
-    sendResponse(res, {
-      statusCode: httpStatus.CREATED,
-      success: true,
-      message: "New service added to diagnostic center!",
-      data: result,
-    });
-  }
-);
-
-const getServicesByDiagnosticCenter = catchAsync(
-  async (req: Request, res: Response) => {
-    const { centerId } = req.params;
-    const result = await ServiceServices.getServicesByDiagnosticCenter(
-      centerId
-    );
-
-    sendResponse(res, {
-      statusCode: httpStatus.CREATED,
-      success: true,
-      message: "services fetched successfully!",
-      data: result,
-    });
-  }
-);
+const deleteService = catchAsync(async (req: Request, res: Response) => {
+  const { serviceId } = req.params;
+  const result = await ServiceServices.deleteServiceFromDB(serviceId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service deleted successfully ",
+    data: result,
+  });
+});
 
 const getServiceById = catchAsync(async (req: Request, res: Response) => {
   const { serviceId } = req.params;
@@ -74,8 +70,8 @@ const getAllServices = catchAsync(async (req: Request, res: Response) => {
 
 export const ServiceControllers = {
   createService,
-  addServiceToDiagnosticCenter,
-  getServicesByDiagnosticCenter,
   getServiceById,
   getAllServices,
+  updateService,
+  deleteService,
 };

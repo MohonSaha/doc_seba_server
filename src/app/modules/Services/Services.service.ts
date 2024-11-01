@@ -15,44 +15,26 @@ const createServiceIntoDB = async (payload: any) => {
   return result;
 };
 
-const addServiceToDiagnosticCenter = async (payload: any) => {
-  const {
-    predefinedServiceId,
-    diagnosticCenterId,
-    customCost,
-    customDescription,
-  } = payload;
-  // TODO: Check that if the center is exist or not
-  // TODO: Check that if the service is exist or not
-
-  const service = await prisma.predefinedService.findUniqueOrThrow({
+const updateServicesIntoDB = async (serviceId: string, payload: any) => {
+  const updatedData = await prisma.predefinedService.update({
     where: {
-      id: predefinedServiceId,
+      id: serviceId,
     },
+    data: payload,
   });
-
-  const result = await prisma.diagnosticCenterService.create({
-    data: {
-      diagnosticCenterId: diagnosticCenterId,
-      predefinedServiceId: service.id,
-      customCost: customCost || service.defaultCost,
-      customDescription: customDescription || service.description,
-    },
-  });
-
-  return result;
+  return updatedData;
 };
 
-const getServicesByDiagnosticCenter = async (centerId: any) => {
-  // TODO: Check that if the center is exist or not
-
-  const result = await prisma.diagnosticCenterService.findMany({
+const deleteServiceFromDB = async (serviceId: string) => {
+  const updatedData = await prisma.predefinedService.update({
     where: {
-      diagnosticCenterId: centerId,
+      id: serviceId,
+    },
+    data: {
+      isDeleted: true,
     },
   });
-
-  return result;
+  return updatedData;
 };
 
 const getServiceByIdFromDB = async (serviceId: string) => {
@@ -65,7 +47,6 @@ const getServiceByIdFromDB = async (serviceId: string) => {
   return result;
 };
 
-// Get all donors
 const getAllServices = async (
   params: IServiceFilterRequest,
   options: IPaginationOptions
@@ -157,8 +138,8 @@ const getAllServices = async (
 
 export const ServiceServices = {
   createServiceIntoDB,
-  addServiceToDiagnosticCenter,
-  getServicesByDiagnosticCenter,
   getServiceByIdFromDB,
   getAllServices,
+  updateServicesIntoDB,
+  deleteServiceFromDB,
 };
