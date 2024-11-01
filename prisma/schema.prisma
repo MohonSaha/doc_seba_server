@@ -26,38 +26,6 @@ model User {
   @@map("users")
 }
 
-model DiagnosticCenter {
-  diagnosticID   String   @id @default(uuid())
-  dsID           String   @unique
-  name           String?
-  contactInfo    String?
-  altContactInfo String?
-  openingHours   String?
-  websiteUrl     String?
-  description    String?
-  rating         Int?
-  logo           String?
-  bannerImg      String?
-  isDeleted      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  email          String   @unique
-  user           User     @relation(fields: [email], references: [email])
-  addressId      String?
-  address        Address? @relation(fields: [addressId], references: [id])
-
-  @@map("diagnosticCenters")
-}
-
-model Address {
-  id                String             @id @default(uuid())
-  division          String
-  district          String
-  upozila           String
-  diagnosticCenters DiagnosticCenter[]
-
-  @@map("addresses")
-}
 
 model Admin {
   id            String   @id @default(uuid())
@@ -113,6 +81,74 @@ model Patient {
   user          User               @relation(references: [email], fields: [email])
   @@map("patients")
 }
+
+
+model DiagnosticCenter {
+  diagnosticID   String   @id @default(uuid())
+  dsID           String   @unique
+  name           String?
+  contactInfo    String?
+  altContactInfo String?
+  openingHours   String?
+  websiteUrl     String?
+  description    String?
+  rating         Int?
+  logo           String?
+  bannerImg      String?
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  email          String   @unique
+  user           User     @relation(fields: [email], references: [email])
+  addressId      String?
+  address        Address? @relation(fields: [addressId], references: [id])
+  services       DiagnosticCenterService[] // Relationship with center-specific services
+  // facilities          DiagnosticCenterFacility[] // Relationship with facilities
+
+  @@map("diagnosticCenters")
+}
+
+model Address {
+  id                String             @id @default(uuid())
+  division          String
+  district          String
+  upozila           String
+  diagnosticCenters DiagnosticCenter[]
+
+  @@map("addresses")
+}
+
+
+model PredefinedService {
+  id                  String                   @id @default(uuid())
+  serviceName         String                   @unique
+  description         String?
+  defaultCost         Float?
+  category            String                   // e.g., Imaging, Lab Test, Consultation
+  isVerified          Boolean                  @default(false)
+  isDeleted           Boolean                  @default(false)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  diagnosticServices  DiagnosticCenterService[] // Relationship with center-specific services
+
+  @@map("predefinedServices")
+}
+
+model DiagnosticCenterService {
+  id                  String                   @id @default(uuid())
+  diagnosticCenterId  String                   // FK to DiagnosticCenter
+  predefinedServiceId String                   @unique// FK to PredefinedService
+  customCost          Float?                   // Customizable cost per center
+  customDescription   String?                  // Customizable description per center
+  isActive            Boolean                  @default(true)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  diagnosticCenter    DiagnosticCenter         @relation(fields: [diagnosticCenterId], references: [diagnosticID])
+  predefinedService   PredefinedService        @relation(fields: [predefinedServiceId], references: [id])
+
+  @@map("diagnosticCenterServices")
+}
+
 
 enum UserStatus {
   PENDING
