@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { DiagnosticCenterService, Prisma } from "@prisma/client";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 import { IPaginationOptions } from "../../interfaces/pagination";
@@ -36,12 +36,19 @@ const addServiceToDiagnosticCenter = async (payload: any) => {
 };
 
 const getServicesByDiagnosticCenter = async (
+  centerId: string, // Accept centerId as an argument
   params: IdiagnosticCenterServiceFilterRequest,
   options: IPaginationOptions
 ) => {
   const { limit, page, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
   const andConditions: Prisma.DiagnosticCenterServiceWhereInput[] = [];
+
+  // Add filter for the specific diagnostic center
+  andConditions.push({
+    diagnosticCenterId: centerId,
+    isDeleted: false,
+  });
 
   const { searchTerm, isActive, serviceCost, ...filterData } = params;
 
@@ -56,14 +63,14 @@ const getServicesByDiagnosticCenter = async (
     });
   }
 
-  // Add filter for isVerified if it's specified in params
+  // Add filter for isActive if it's specified in params
   if (isActive !== undefined) {
     andConditions.push({
       isActive: isActive === "false" ? false : true,
     });
   }
 
-  // Add filter for defaultCost if it's specified in params and is a valid number
+  // Add filter for serviceCost if it's specified in params and is a valid number
   if (serviceCost) {
     const parsedCost = parseFloat(serviceCost);
     if (!isNaN(parsedCost)) {
@@ -75,7 +82,7 @@ const getServicesByDiagnosticCenter = async (
     }
   }
 
-  //   Implementing Filtering On Specific Fields And Values
+  // Filtering on specific fields and values
   if (Object.keys(filterData).length > 0) {
     andConditions.push({
       AND: Object.keys(filterData).map((key) => ({
@@ -90,8 +97,6 @@ const getServicesByDiagnosticCenter = async (
     AND: andConditions,
   };
 
-  // console.dir(whereConditions, { depth: null });
-
   const result = await prisma.diagnosticCenterService.findMany({
     where: whereConditions,
     select: {
@@ -105,8 +110,8 @@ const getServicesByDiagnosticCenter = async (
     skip,
     take: limit,
     orderBy:
-      sortBy === "defaultCost"
-        ? { serviceCost: sortOrder as Prisma.SortOrder } // Casting sortOrder as Prisma.SortOrder
+      sortBy === "serviceCost"
+        ? { serviceCost: sortOrder as Prisma.SortOrder }
         : { createdAt: "desc" }, // Sort by createdAt as default
   });
 
@@ -124,7 +129,56 @@ const getServicesByDiagnosticCenter = async (
   };
 };
 
+const updatediagnosticCenterServiceIntoDB = async (
+  centerId: string,
+  serviceId: string,
+  payload: Partial<DiagnosticCenterService>
+) => {
+  const updatedData = await prisma.diagnosticCenterService.update({
+    where: {
+      diagnosticCenterId: centerId,
+      id: serviceId,
+    },
+    data: payload,
+  });
+  return updatedData;
+};
+
+const deleteDiagnosticCenterServiceFromDB = async (
+  centerId: string,
+  serviceId: string
+) => {
+  const updatedData = await prisma.diagnosticCenterService.update({
+    where: {
+      diagnosticCenterId: centerId,
+      id: serviceId,
+    },
+    data: {
+      isDeleted: true,
+    },
+  });
+  return updatedData;
+};
+
+const changeStatusDiagnosticCenterServiceFromDB = async (
+  centerId: string,
+  serviceId: string,
+  payload: Partial<DiagnosticCenterService>
+) => {
+  const updatedData = await prisma.diagnosticCenterService.update({
+    where: {
+      diagnosticCenterId: centerId,
+      id: serviceId,
+    },
+    data: payload,
+  });
+  return updatedData;
+};
+
 export const diagnosticCenterServiceServices = {
   addServiceToDiagnosticCenter,
   getServicesByDiagnosticCenter,
+  updatediagnosticCenterServiceIntoDB,
+  deleteDiagnosticCenterServiceFromDB,
+  changeStatusDiagnosticCenterServiceFromDB,
 };

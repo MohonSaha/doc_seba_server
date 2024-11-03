@@ -7,7 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id                 String            @id @default(uuid())
   email              String            @unique
@@ -26,7 +25,6 @@ model User {
   @@map("users")
 }
 
-
 model Admin {
   id            String   @id @default(uuid())
   dsID          String   @unique
@@ -43,29 +41,52 @@ model Admin {
 }
 
 model Doctor {
-  id                  String   @id @default(uuid())
-  dsID                String   @unique
-  name                String?
-  email               String   @unique
-  profilePhoto        String?
-  contactNumber       String?
-  address             String?
-  registrationNo      String?
-  experience          Int      @default(0)
-  gender              Gender?
-  appointmentFee      Int?
-  qualification       String?
-  currentWorkignPlace String?
-  designation         String?
-  averageRating       Float    @default(0.0)
-  isDeleted           Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  user                User     @relation(fields: [email], references: [email])
+  id                      String                    @id @default(uuid())
+  dsID                    String                    @unique
+  name                    String?
+  email                   String                    @unique
+  profilePhoto            String?
+  contactNumber           String?
+  address                 String?
+  registrationNo          String?
+  experience              Int                       @default(0)
+  gender                  Gender?
+  appointmentFee          Int?
+  qualification           String?
+  currentWorkignPlace     String?
+  designation             String?
+  averageRating           Float                     @default(0.0)
+  isDeleted               Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  user                    User                      @relation(fields: [email], references: [email])
+  DoctorSpecialities      DoctorSpecialities[]
+  diagnosticCenters DiagnosticCenterDoctors[]
 
   @@map("doctors")
 }
 
+model Specialities {
+  id                 String               @id @unique @default(uuid())
+  title              String
+  icon               String
+  doctorSpecialities DoctorSpecialities[]
+
+  @@map("specialities")
+}
+
+model DoctorSpecialities {
+  specialitiesId String
+  doctorId       String
+
+  // realtion 
+  specialities Specialities @relation(fields: [specialitiesId], references: [id])
+  doctor       Doctor       @relation(fields: [doctorId], references: [id])
+
+  // composit key
+  @@id([specialitiesId, doctorId])
+  @@map("doctorspecialities")
+}
 
 model Patient {
   id            String   @id @unique @default(uuid())
@@ -78,32 +99,33 @@ model Patient {
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  user          User               @relation(references: [email], fields: [email])
+  user          User     @relation(references: [email], fields: [email])
+
   @@map("patients")
 }
 
-
 model DiagnosticCenter {
-  diagnosticID   String   @id @default(uuid())
-  dsID           String   @unique
-  name           String?
-  contactInfo    String?
-  altContactInfo String?
-  openingHours   String?
-  websiteUrl     String?
-  description    String?
-  rating         Int?
-  logo           String?
-  bannerImg      String?
-  isDeleted      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  email          String   @unique
-  user           User     @relation(fields: [email], references: [email])
-  addressId      String?
-  address        Address? @relation(fields: [addressId], references: [id])
-  services       DiagnosticCenterService[] // Relationship with center-specific services
+  diagnosticID            String                    @id @default(uuid())
+  dsID                    String                    @unique
+  name                    String?
+  contactInfo             String?
+  altContactInfo          String?
+  openingHours            String?
+  websiteUrl              String?
+  description             String?
+  rating                  Int?
+  logo                    String?
+  bannerImg               String?
+  isDeleted               Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  email                   String                    @unique
+  user                    User                      @relation(fields: [email], references: [email])
+  addressId               String?
+  address                 Address?                  @relation(fields: [addressId], references: [id])
+  services                DiagnosticCenterService[] // Relationship with center-specific services
   // facilities          DiagnosticCenterFacility[] // Relationship with facilities
+  diagnosticCenterDoctors DiagnosticCenterDoctors[]
 
   @@map("diagnosticCenters")
 }
@@ -118,38 +140,179 @@ model Address {
   @@map("addresses")
 }
 
-
 model PredefinedService {
-  id                  String                   @id @default(uuid())
-  serviceName         String                   @unique
-  description         String?
-  defaultCost         Float?
-  category            String                   // e.g., Imaging, Lab Test, Consultation
-  isVerified          Boolean                  @default(false)
-  isDeleted           Boolean                  @default(false)
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-  diagnosticServices  DiagnosticCenterService[] // Relationship with center-specific services
+  id                 String                    @id @default(uuid())
+  defaultServiceName String                    @unique
+  serviceName        String                    @unique
+  description        String
+  defaultCost        Float
+  icon               String
+  category           String // e.g., Imaging, Lab Test, Consultation
+  isVerified         Boolean                   @default(false)
+  isDeleted          Boolean                   @default(false)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  diagnosticServices DiagnosticCenterService[] // Relationship with center-specific services
 
   @@map("predefinedServices")
 }
 
 model DiagnosticCenterService {
-  id                  String                   @id @default(uuid())
-  diagnosticCenterId  String                   // FK to DiagnosticCenter
-  predefinedServiceId String                   @unique// FK to PredefinedService
-  serviceName         String                   @unique
-  serviceCost         Float?                   // Customizable cost per center
-  serviceDescription  String?                  // Customizable description per center
+  id                  String            @id @default(uuid())
+  diagnosticCenterId  String // FK to DiagnosticCenter
+  predefinedServiceId String            @unique // FK to PredefinedService
+  serviceName         String            @unique
+  serviceCost         Float? // Customizable cost per center
+  serviceDescription  String? // Customizable description per center
   serviceCategory     String?
-  isActive            Boolean                  @default(true)
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-  diagnosticCenter    DiagnosticCenter         @relation(fields: [diagnosticCenterId], references: [diagnosticID])
-  predefinedService   PredefinedService        @relation(fields: [predefinedServiceId], references: [id])
+  icon                String
+  isActive            Boolean           @default(true)
+  isDeleted           Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  diagnosticCenter    DiagnosticCenter  @relation(fields: [diagnosticCenterId], references: [diagnosticID])
+  predefinedService   PredefinedService @relation(fields: [predefinedServiceId], references: [id])
 
   @@map("diagnosticCenterServices")
 }
+
+// model DiagnosticCenterDoctors {
+//   diagnosticID String
+//   doctorId     String
+
+//   startTime          DateTime        
+//   endTime            DateTime 
+
+//   scheduleType       ScheduleType 
+
+//   // Weekly schedule fields
+//   daysOfWeek         Json?     // Array of days for weekly schedule
+
+//   // Specific date schedule field
+//   specificDate       DateTime?        // Exact date for a single appointment
+  
+//   // Interval-based schedule fields
+//   intervalDays       Int?             // Interval days (e.g., every 10, 15, 30 days)
+//   intervalStartDate  DateTime?        // Start date for the interval schedule
+
+//   // Random monthly dates stored as JSON
+//   randomDates        Json?            // JSON array of specific dates for random monthly dates
+
+//   isActive            Boolean @default(true)
+//   isDeleted           Boolean           @default(false)
+//   createdAt           DateTime          @default(now())
+//   updatedAt           DateTime          @updatedAt
+  
+//   // realtion 
+//   diagnosticCenterDoctor DiagnosticCenter @relation(fields: [diagnosticID], references: [diagnosticID])
+//   doctor                 Doctor           @relation(fields: [doctorId], references: [id])
+
+//   // composit key
+//   @@id([diagnosticID, doctorId])
+//   @@map("diagnosticCenterDoctors")
+// }
+
+model DiagnosticCenterDoctors {
+  diagnosticID String
+  doctorId     String
+
+  // startTime          DateTime        
+  // endTime            DateTime 
+
+  // scheduleType       ScheduleType 
+
+  // Weekly schedule field moved to related table
+  // daysOfWeek         DaysOfWeek[]      // Relation to DaysOfWeek table
+
+  // Specific date schedule field
+  // specificDate       DateTime?         // Exact date for a single appointment
+  
+  // Interval-based schedule fields
+  // intervalDays       Int?              // Interval days (e.g., every 10, 15, 30 days)
+  // intervalStartDate  DateTime?         // Start date for the interval schedule
+
+  // Random monthly dates moved to related table
+  // randomDates        RandomDates[]     // Relation to RandomDates table
+
+  isActive           Boolean           @default(true)
+  isDeleted          Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+   schedules          Schedules[] 
+
+  // Relations
+  diagnosticCenterDoctor DiagnosticCenter @relation(fields: [diagnosticID], references: [diagnosticID])
+  doctor                 Doctor           @relation(fields: [doctorId], references: [id])
+
+  // Composite key
+  @@id([diagnosticID, doctorId])
+  @@map("diagnosticCenterDoctors")
+}
+
+
+
+model Schedules {
+  id                  Int                @id @default(autoincrement())
+  diagnosticID        String
+  doctorId            String
+
+  startTime          DateTime        
+  endTime            DateTime 
+
+  // startTime    String
+  // endTime      String
+
+  scheduleType       ScheduleType 
+
+  // Weekly schedule fields
+  daysOfWeek          DaysOfWeek[]       // Relation to DaysOfWeek table for weekly schedules
+
+  // Specific date schedule
+  specificDate        DateTime?          // Exact date for a single appointment
+
+  // Interval-based schedule fields
+  intervalDays        Int?               // Interval days (e.g., every 10, 15, 30 days)
+  intervalStartDate   DateTime?          // Start date for interval-based schedules
+
+  // Random monthly dates
+  randomDates         RandomDates[]      // Relation to RandomDates table for random monthly dates
+
+  isActive           Boolean           @default(true)
+  isDeleted          Boolean           @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  // Foreign key relationship with DiagnosticCenterDoctors
+  diagnosticCenterDoctor DiagnosticCenterDoctors @relation(fields: [diagnosticID, doctorId], references: [diagnosticID, doctorId], onDelete: Cascade)
+
+  @@map("schedules")
+}
+
+model DaysOfWeek {
+  id                  Int                @id @default(autoincrement())
+  scheduleId          Int
+  dayOfWeek           String             // E.g., "Monday", "Tuesday", etc.
+
+  // Foreign key relationship with Schedules
+  schedule            Schedules          @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("daysOfWeek")
+}
+
+model RandomDates {
+  id                  Int                @id @default(autoincrement())
+  scheduleId          Int
+  date                DateTime           // Specific random date for monthly schedule
+
+  // Foreign key relationship with Schedules
+  schedule            Schedules          @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("randomDates")
+}
+
+
+
 
 
 enum UserStatus {
@@ -172,7 +335,6 @@ enum Gender {
   FEMALE
 }
 
-
 enum BloodGroup {
   A_POSITIVE
   A_NEGATIVE
@@ -191,3 +353,11 @@ enum MaritalStatus {
   WIDOWED
 }
 
+
+
+enum ScheduleType {
+  WEEKLY            // Doctor available on specific days of the week
+  SPECIFIC_DATE     // Doctor available on one specific date
+  INTERVAL          // Doctor available after a set interval (e.g., every 15 days)
+  RANDOM_DATES      // Doctor available on random dates within a month
+}

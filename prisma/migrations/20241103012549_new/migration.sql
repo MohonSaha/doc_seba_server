@@ -58,6 +58,24 @@ CREATE TABLE `doctors` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `specialities` (
+    `id` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(191) NOT NULL,
+    `icon` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `specialities_id_key`(`id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `doctorspecialities` (
+    `specialitiesId` VARCHAR(191) NOT NULL,
+    `doctorId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`specialitiesId`, `doctorId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `patients` (
     `id` VARCHAR(191) NOT NULL,
     `dsID` VARCHAR(191) NOT NULL,
@@ -113,15 +131,18 @@ CREATE TABLE `addresses` (
 -- CreateTable
 CREATE TABLE `predefinedServices` (
     `id` VARCHAR(191) NOT NULL,
+    `defaultServiceName` VARCHAR(191) NOT NULL,
     `serviceName` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NULL,
-    `defaultCost` DOUBLE NULL,
+    `description` VARCHAR(191) NOT NULL,
+    `defaultCost` DOUBLE NOT NULL,
+    `icon` VARCHAR(191) NOT NULL,
     `category` VARCHAR(191) NOT NULL,
     `isVerified` BOOLEAN NOT NULL DEFAULT false,
     `isDeleted` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX `predefinedServices_defaultServiceName_key`(`defaultServiceName`),
     UNIQUE INDEX `predefinedServices_serviceName_key`(`serviceName`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -135,7 +156,9 @@ CREATE TABLE `diagnosticCenterServices` (
     `serviceCost` DOUBLE NULL,
     `serviceDescription` VARCHAR(191) NULL,
     `serviceCategory` VARCHAR(191) NULL,
+    `icon` VARCHAR(191) NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `isDeleted` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -144,11 +167,64 @@ CREATE TABLE `diagnosticCenterServices` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `diagnosticCenterDoctors` (
+    `diagnosticID` VARCHAR(191) NOT NULL,
+    `doctorId` VARCHAR(191) NOT NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `isDeleted` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`diagnosticID`, `doctorId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `schedules` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `diagnosticID` VARCHAR(191) NOT NULL,
+    `doctorId` VARCHAR(191) NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
+    `scheduleType` ENUM('WEEKLY', 'SPECIFIC_DATE', 'INTERVAL', 'RANDOM_DATES') NOT NULL,
+    `specificDate` DATETIME(3) NULL,
+    `intervalDays` INTEGER NULL,
+    `intervalStartDate` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `daysOfWeek` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `scheduleId` INTEGER NOT NULL,
+    `dayOfWeek` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `randomDates` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `scheduleId` INTEGER NOT NULL,
+    `date` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `admins` ADD CONSTRAINT `admins_email_fkey` FOREIGN KEY (`email`) REFERENCES `users`(`email`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `doctors` ADD CONSTRAINT `doctors_email_fkey` FOREIGN KEY (`email`) REFERENCES `users`(`email`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `doctorspecialities` ADD CONSTRAINT `doctorspecialities_specialitiesId_fkey` FOREIGN KEY (`specialitiesId`) REFERENCES `specialities`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `doctorspecialities` ADD CONSTRAINT `doctorspecialities_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `doctors`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `patients` ADD CONSTRAINT `patients_email_fkey` FOREIGN KEY (`email`) REFERENCES `users`(`email`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -164,3 +240,18 @@ ALTER TABLE `diagnosticCenterServices` ADD CONSTRAINT `diagnosticCenterServices_
 
 -- AddForeignKey
 ALTER TABLE `diagnosticCenterServices` ADD CONSTRAINT `diagnosticCenterServices_predefinedServiceId_fkey` FOREIGN KEY (`predefinedServiceId`) REFERENCES `predefinedServices`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `diagnosticCenterDoctors` ADD CONSTRAINT `diagnosticCenterDoctors_diagnosticID_fkey` FOREIGN KEY (`diagnosticID`) REFERENCES `diagnosticCenters`(`diagnosticID`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `diagnosticCenterDoctors` ADD CONSTRAINT `diagnosticCenterDoctors_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `doctors`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `schedules` ADD CONSTRAINT `schedules_diagnosticID_doctorId_fkey` FOREIGN KEY (`diagnosticID`, `doctorId`) REFERENCES `diagnosticCenterDoctors`(`diagnosticID`, `doctorId`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `daysOfWeek` ADD CONSTRAINT `daysOfWeek_scheduleId_fkey` FOREIGN KEY (`scheduleId`) REFERENCES `schedules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `randomDates` ADD CONSTRAINT `randomDates_scheduleId_fkey` FOREIGN KEY (`scheduleId`) REFERENCES `schedules`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

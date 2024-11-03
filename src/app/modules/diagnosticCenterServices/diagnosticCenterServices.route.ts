@@ -13,4 +13,19 @@ router.get(
   diagnosticCenterServiceControllers.getServicesByDiagnosticCenter
 );
 
+router.patch(
+  "/:centerId/:serviceId",
+  diagnosticCenterServiceControllers.updateDiagnosticCenterService
+);
+
+router.patch(
+  "/delete/:centerId/:serviceId",
+  diagnosticCenterServiceControllers.deletediagnosticCenterService
+);
+
+router.patch(
+  "/change-status/:centerId/:serviceId",
+  diagnosticCenterServiceControllers.changeStatusDiagnosticCenterService
+);
+
 export const diagnosticCenterServiceRoutes = router;

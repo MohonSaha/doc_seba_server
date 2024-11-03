@@ -3,6 +3,8 @@ import { DiagnosticCenters } from "../modules/diagnosticCenters/diagnosticCenter
 import { UserRoutes } from "../modules/users/users.route";
 import { ServiceRoutes } from "../modules/Services/Services.route";
 import { diagnosticCenterServiceRoutes } from "../modules/diagnosticCenterServices/diagnosticCenterServices.route";
+import { DiagnosticCenterDoctorsRoutes } from "../modules/DiagnosticCenterDoctors/DiagnosticCenterDoctors.route";
+import { ScheduleRoutes } from "../modules/schedules/schedules.route";
 
 const router = express.Router();
 
@@ -22,6 +24,14 @@ const moduleRoutes = [
   {
     path: "/diagnostic-center-services",
     route: diagnosticCenterServiceRoutes,
+  },
+  {
+    path: "/diagnostic-center-doctors",
+    route: DiagnosticCenterDoctorsRoutes,
+  },
+  {
+    path: "/schedules",
+    route: ScheduleRoutes,
   },
 ];
 
